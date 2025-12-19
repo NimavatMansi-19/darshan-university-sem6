@@ -1,0 +1,15 @@
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\bin\Debug\Lab-5.exe.config
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\bin\Debug\Lab-5.exe
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\bin\Debug\Lab-5.pdb
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\obj\Debug\Lab-5.csproj.AssemblyReference.cache
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\obj\Debug\Lab-5.csproj.CoreCompileInputs.cache
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\obj\Debug\Lab-5.exe
+C:\Users\darsh\OneDrive\Desktop\TA-(.netCore)\Lab-5\obj\Debug\Lab-5.pdb
+D:\Sem6\TA_.NET\Lab-5\Lab-5\bin\Debug\Lab-5.exe.config
+D:\Sem6\TA_.NET\Lab-5\Lab-5\bin\Debug\Lab-5.exe
+D:\Sem6\TA_.NET\Lab-5\Lab-5\bin\Debug\Lab-5.pdb
+D:\Sem6\TA_.NET\Lab-5\Lab-5\obj\Debug\Lab-5.csproj.AssemblyReference.cache
+D:\Sem6\TA_.NET\Lab-5\Lab-5\obj\Debug\Lab-5.exe.config
+D:\Sem6\TA_.NET\Lab-5\Lab-5\obj\Debug\Lab-5.csproj.CoreCompileInputs.cache
+D:\Sem6\TA_.NET\Lab-5\Lab-5\obj\Debug\Lab-5.exe
+D:\Sem6\TA_.NET\Lab-5\Lab-5\obj\Debug\Lab-5.pdb
