@@ -1,14 +1,6 @@
-# Establishing SQL Connection & Displaying Department Data in ASP.NET Core MVC
+# Establishing SQL Connection & Displaying Department Data
 
-This guide explains **step by step** how to fetch and display **Department** data using a **SelectAll Stored Procedure** in **ASP.NET Core MVC**. It is written in simple language and is exam‑friendly.
 
----
-
-## Prerequisite
-
-* SQL Server installed
-* ASP.NET Core MVC project created
-* `MOM_Department` table available in the database
 
 ### Table Structure: `MOM_Department`
 
@@ -23,17 +15,13 @@ This guide explains **step by step** how to fetch and display **Department** dat
 
 ## Step 1: Create SelectAll Stored Procedure
 
-### Why do we need a Stored Procedure?
+### Why Stored Procedure?
 
-A **Stored Procedure (SP)** is a pre-written SQL query stored inside the database.
-
-We use a SelectAll stored procedure because:
-
-* It keeps database logic inside SQL Server
-* Improves security (no direct table access)
-* Makes code reusable
-* Reduces SQL injection risk
-* Very commonly used in **college & university projects**
+* Keeps database logic inside SQL Server
+* Improves security
+* Prevents SQL Injection
+* Reusable
+* Commonly used in exams & real projects
 
 ### Stored Procedure Code
 
@@ -42,30 +30,17 @@ CREATE PROCEDURE [dbo].[PR_MOM_Department_SelectAll]
 AS
 BEGIN
     SELECT
-        [dbo].[MOM_Department].[DepartmentID],
-        [dbo].[MOM_Department].[DepartmentName],
-        [dbo].[MOM_Department].[Created],
-        [dbo].[MOM_Department].[Modified]
-    FROM
-        [dbo].[MOM_Department]
+        DepartmentID,
+        DepartmentName,
+        Created,
+        Modified
+    FROM MOM_Department
 END
 ```
 
-This procedure returns **all rows** from the `MOM_Department` table.
-
 ---
 
-## Step 2: Add Static Data (Optional but Recommended)
-
-### Why do we add static data?
-
-Static (sample) data is added so that:
-
-* We can verify database connectivity
-* We can see output on UI
-* It avoids empty tables during demo or exam
-
-Example insert query:
+## Step 2: Insert Sample Data (Optional)
 
 ```sql
 INSERT INTO MOM_Department (DepartmentName, Modified)
@@ -74,79 +49,50 @@ VALUES ('HR', GETDATE()), ('IT', GETDATE()), ('Finance', GETDATE())
 
 ---
 
-## Step 3: Configure Connection String in `appsettings.json`
+## Step 3: Configure Connection String (`appsettings.json`)
 
-### What is a Connection String?
-
-A **Connection String** tells ASP.NET Core:
-
-* Where the SQL Server is located
-* Which database to use
-* How to authenticate the user
-
-Without a connection string, the application **cannot connect** to the database.
-
-### Why `appsettings.json`?
-
-* Central place for configuration
-* Easy to change without touching code
-* Supports different environments (Development, Production)
-
-### For Windows Users
+### Windows Authentication
 
 ```json
 "ConnectionStrings": {
-  "ConnectionString": "Data Source=YOUR_SERVER_NAME;Initial Catalog=YOUR_DATABASE_NAME;Integrated Security=true;"
+  "ConnectionString": "Data Source=YOUR_SERVER;Initial Catalog=YOUR_DB;Integrated Security=true;"
 }
 ```
 
-### Example
+### SQL Authentication (Mac/Linux)
 
 ```json
 "ConnectionStrings": {
-  "ConnectionString": "Data Source=LAPTOP-LBMAFD6U\SQLEXPRESS;Initial Catalog=StudentMaster;Integrated Security=true;"
-}
-```
-
-### For Mac Users
-
-```json
-"ConnectionStrings": {
-  "ConnectionString": "Data Source=localhost;Initial Catalog=Practice;User id=SA; password=MyStrongPass123;"
+  "ConnectionString": "Data Source=localhost;Initial Catalog=Practice;User Id=SA;Password=MyStrongPass123;"
 }
 ```
 
 ---
 
-### For Mac Users
+## Step 4: Create Department Model
 
-```json
-"ConnectionStrings": {
-  "ConnectionString": "Data Source=localhost;Initial Catalog=Practice;User id=SA; password=MyStrongPass123;"
+📁 **Models/DepartmentModel.cs**
+
+```csharp
+public class DepartmentModel
+{
+    public int DepartmentID { get; set; }
+    public string DepartmentName { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime Modified { get; set; }
 }
 ```
 
+### Why Model?
+
+* Represents one row of data
+* Strongly typed
+* Cleaner than DataTable
+* Industry standard
+
 ---
 
-## Step 4: Configure Controller to Read Connection String
-
-### What is `IConfiguration`?
-
-`IConfiguration` is used to:
-
-* Read values from `appsettings.json`
-* Access connection strings securely
-
-### Why Constructor Injection?
-
-ASP.NET Core follows **Dependency Injection**.
-Using constructor injection:
-
-* Makes code clean
-* Improves testability
-* Is the recommended approach
-
-### Controller Code
+## Step 5: Inject IConfiguration in Controller
 
 ```csharp
 private IConfiguration configuration;
@@ -157,123 +103,112 @@ public DepartmentController(IConfiguration _configuration)
 }
 ```
 
-Now the controller can read database settings.
+---
+
+## Step 6: Install Required NuGet Package
+
+Install **System.Data.SqlClient**
+
+* Tools → NuGet Package Manager
+* Manage NuGet Packages
+* Search: `System.Data.SqlClient`
 
 ---
 
-## Step 5: Install Required NuGet Package
+## Step 7: Write SelectAll Logic
 
-### Why do we need `System.Data.SqlClient`?
+### Understanding `CommandType`
 
-ASP.NET Core **cannot directly talk to SQL Server**.
-
-This library provides:
-
-* `SqlConnection` → connects to database
-* `SqlCommand` → executes stored procedures
-* `SqlDataReader` → reads data
-
-### How to Install
-
-1. Go to **Tools → NuGet Package Manager**
-2. Click **Manage NuGet Packages for Solution**
-3. Search: `System.Data.SqlClient`
-4. Install the package
-
-⚠️ Project should NOT be running during installation.
-
----
-
-## Step 6: Write Logic for SelectAll Action Method
-
-### What happens in this step?
-
-In this step, ASP.NET Core communicates with SQL Server using **ADO.NET**.
-
-Here we:
-
-* Read connection string
-* Open SQL connection
-* Execute database command
-* Fetch data
-* Send data to View
-
----
-
-### Types of `CommandType` in ADO.NET
-
-`CommandType` tells SQL Server **how to execute the command**.
-
-There are **3 possible types**:
-
-#### 1️⃣ CommandType.StoredProcedure (Most Used)
+`CommandType` tells SQL Server **how the command should be executed**.
 
 ```csharp
 command.CommandType = CommandType.StoredProcedure;
 ```
 
-* Used when calling **stored procedures**
-* Secure and reusable
-* Recommended for **enterprise & exam projects**
+**Explanation (Exam-friendly):**
 
-Example:
+* `StoredProcedure` → Used when we are calling a stored procedure name
+* It tells SQL Server not to treat the command as a normal SQL query
+* It improves security and performance
+* Most commonly used in exams and enterprise projects
 
-```sql
-PR_MOM_Department_SelectAll
-```
+Other types (just for knowledge):
+
+* `CommandType.Text` → Used for inline SQL queries
+* `CommandType.TableDirect` → Rarely used
 
 ---
 
-#### 2️⃣ CommandType.Text
+### Understanding `while (reader.Read())` Loop
 
 ```csharp
-command.CommandType = CommandType.Text;
-command.CommandText = "SELECT * FROM MOM_Department";
+while (reader.Read())
+{
+    // read data
+}
 ```
 
-* Used for **inline SQL queries**
-* Not recommended for large projects
-* Higher risk of SQL Injection if not handled properly
+**Explanation (Very Important for Viva):**
+
+* `SqlDataReader` reads data **row by row**
+* `reader.Read()` moves the cursor to the **next row**
+* The loop runs until **all rows are read**
+* Each loop iteration represents **one record** from the database
+
+In simple words:
+
+* Stored Procedure returns many rows
+* `while` loop reads each row one by one
+* Each row is converted into a Model object
 
 ---
 
-#### 3️⃣ CommandType.TableDirect (Rarely Used)
+## Step 7: Write SelectAll Logic
 
-* Directly accesses table
-* Mostly unsupported in SQL Server
-* **Not recommended**
+Below are **both versions** of controller code:
 
 ---
 
-### Action Method Code (Stored Procedure Way)
+### 🔹 Version 1: Controller Code (WITHOUT using statement)
 
 ```csharp
 public IActionResult Index()
 {
-    string connectionString = this.configuration.GetConnectionString("ConnectionString");
+    List<DepartmentModel> list = new List<DepartmentModel>();
+
+    string connectionString = configuration.GetConnectionString("ConnectionString");
     SqlConnection connection = new SqlConnection(connectionString);
     connection.Open();
 
     SqlCommand command = connection.CreateCommand();
     command.CommandType = CommandType.StoredProcedure;
     command.CommandText = "PR_MOM_Department_SelectAll";
-
     SqlDataReader reader = command.ExecuteReader();
-    DataTable table = new DataTable();
-    table.Load(reader);
 
-    return View(table);
+    while (reader.Read())
+    {
+        DepartmentModel model = new DepartmentModel();
+        model.DepartmentID = Convert.ToInt32(reader["DepartmentID"]);
+        model.DepartmentName = reader["DepartmentName"].ToString();
+        model.Created = Convert.ToDateTime(reader["Created"]);
+        model.Modified = Convert.ToDateTime(reader["Modified"]);
+
+        list.Add(model);
+    }
+
+    connection.Close();
+    return View(list);
 }
 ```
 
 ---
 
-### Alternative Way: Using `using` Statement (Best Practice)
+### 🔹 Version 2: Controller Code (WITH using statement – Best Practice)
 
 ```csharp
 public IActionResult Index()
 {
-    DataTable table = new DataTable();
+    List<DepartmentModel> list = new List<DepartmentModel>();
 
     using (SqlConnection connection = new SqlConnection(
            configuration.GetConnectionString("ConnectionString")))
@@ -282,176 +217,77 @@ public IActionResult Index()
         {
             command.CommandType = CommandType.StoredProcedure;
             connection.Open();
+
             SqlDataReader reader = command.ExecuteReader();
-            table.Load(reader);
+
+            while (reader.Read())
+            {
+                DepartmentModel model = new DepartmentModel();
+                model.DepartmentID = Convert.ToInt32(reader["DepartmentID"]);
+                model.DepartmentName = reader["DepartmentName"].ToString();
+                model.Created = Convert.ToDateTime(reader["Created"]);
+                model.Modified = Convert.ToDateTime(reader["Modified"]);
+
+                list.Add(model);
+            }
         }
     }
 
-    return View(table);
+    return View(list);
 }
 ```
 
-✔ Automatically closes connection
-✔ Prevents memory leaks
-✔ Recommended for real projects
-
 ---
 
+## Step 8: Create Strongly Typed View
 
-## Step 7: Create View to Display Department Data
-
-### Why Razor View?
-
-Razor View:
-
-* Displays server-side data
-* Uses C# + HTML
-* Common in MVC applications
-
-### View Location
-
-```
-Views/Department/Index.cshtml
-```
-
-### View Code
+📁 **Views/Department/Index.cshtml**
 
 ```csharp
-@model System.Data.DataTable
-@using System.Data
+@model List<DepartmentModel>
 
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Department ID</th>
-            <th>Department Name</th>
+            <th>ID</th>
+            <th>Name</th>
             <th>Created</th>
             <th>Modified</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (DataRow row in Model.Rows)
+        @foreach (var item in Model)
         {
             <tr>
-                <td>@row["DepartmentID"]</td>
-                <td>@row["DepartmentName"]</td>
-                <td>@row["Created"]</td>
-                <td>@row["Modified"]</td>
+                <td>@item.DepartmentID</td>
+                <td>@item.DepartmentName</td>
+                <td>@item.Created</td>
+                <td>@item.Modified</td>
             </tr>
         }
     </tbody>
 </table>
 ```
 
-### How data reaches the View?
-
-1. Controller executes stored procedure
-2. SQL Server returns rows
-3. Rows are stored inside `DataTable`
-4. `DataTable` is passed to View as `Model`
-5. Razor View reads and displays data
-
 ---
 
-## Understanding `foreach` Loop and `DataRow`
+## How Data Flows
 
-This part is **very important for exams and viva**.
-
----
-
-### What is `DataTable`?
-
-* `DataTable` is an **in-memory table**
-* It stores data in **rows and columns**, just like a database table
-* It belongs to the `System.Data` namespace
-
-Example:
-
-* Columns → DepartmentID, DepartmentName, Created, Modified
-* Rows → Actual department records
-
----
-
-### What is `DataRow`?
-
-* `DataRow` represents **ONE single row** of data in a `DataTable`
-* Each `DataRow` contains column values
-
-Think of it like this:
-
-* `DataTable` → Entire table
-* `DataRow` → One record (one department)
-
----
-
-### Why do we use `foreach` loop?
-
-* Because there are **multiple rows** in the DataTable
-* `foreach` helps us iterate (loop) through **each record one by one**
-* It is simple, readable, and commonly used in Razor views
-
----
-
-### foreach Loop Syntax Used in View
-
-```csharp
-@foreach (DataRow row in Model.Rows)
-{
-    <tr>
-        <td>@row["DepartmentID"]</td>
-        <td>@row["DepartmentName"]</td>
-        <td>@row["Created"]</td>
-        <td>@row["Modified"]</td>
-    </tr>
-}
-```
+1. Controller calls Stored Procedure
+2. SQL Server returns records
+3. `SqlDataReader` reads row by row
+4. Each row maps to `DepartmentModel`
+5. All models stored in `List<DepartmentModel>`
+6. List passed to View
+7. Razor View displays data
 
 ---
 
 
+## Memory Trick
 
-* `Model` → Refers to `DataTable` sent from Controller
-* `Model.Rows` → Collection of all rows in DataTable
-* `DataRow row` → Represents one department record
-* `row["ColumnName"]` → Fetches value of that column
-
-
-## Final Output
-
-When you browser:
-
-```
-/Department/Index
-```
-
-All department records appear in tabular format.
+**SP → ConnectionString → IConfiguration → SqlClient → Command → Reader → Model → List → View**
 
 ---
 
-## Complete Flow (Exam Answer)
-
-1. Create stored procedure in SQL Server
-2. Configure connection string
-3. Inject `IConfiguration`
-4. Install SqlClient library
-5. Execute stored procedure using ADO.NET
-6. Store result in DataTable
-7. Display data using Razor View
-
----
-## Way to Remeber
-
-| Letter | Stands For        | What to Remember           |
-| ------ | ----------------- | -------------------------- |
-| **SP** | Stored Procedure  | Create SelectAll SP        |
-| **C**  | Connection String | Add in `appsettings.json`  |
-| **C**  | Configuration     | Use `IConfiguration`       |
-| **D**  | Dependency        | Install `SqlClient`        |
-| **C**  | Command           | Execute SP                 |
-| **R**  | Reader            | Read data into `DataTable` |
-| **V**  | View              | Display using Razor        |
-
-SP → appsettings → IConfiguration → SqlClient
-→ CommandType.SP → SqlDataReader
-→ DataTable → foreach → DataRow
-
+✅ This approach is **recommended for exams, interviews, and real projects**.
