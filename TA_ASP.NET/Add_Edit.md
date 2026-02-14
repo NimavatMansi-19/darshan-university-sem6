@@ -1,4 +1,4 @@
-# Insert & Update Department Using Single Save Method (Based on Given Table)
+# Insert & Update Department Using Single Save Method 
 
 ---
 
@@ -43,8 +43,7 @@ BEGIN
 END
 ```
 
-🔹 Created column automatically uses DEFAULT GETDATE()
-🔹 Modified must be supplied (NOT NULL)
+⚠️ **Error Point:** If you do not pass Modified column, it will throw error because Modified is NOT NULL.
 
 ---
 
@@ -63,6 +62,8 @@ BEGIN
 END
 ```
 
+⚠️ **Error Point:** If DepartmentID does not exist, no row will be updated.
+
 ---
 
 # Step 3: Department Model
@@ -75,8 +76,7 @@ public class DepartmentModel
 }
 ```
 
-✔ Created and Modified handled by SQL Server
-✔ No need to include them in form
+⚠️ **Error Point:** If DepartmentName is NULL, database will throw error because it is NOT NULL.
 
 ---
 
@@ -91,6 +91,8 @@ public DepartmentController(IConfiguration _configuration)
 }
 ```
 
+⚠️ **Error Point:** If connection string name is wrong in appsettings.json, connection will fail.
+
 ---
 
 # Step 5: AddEdit (GET Method)
@@ -102,31 +104,38 @@ public IActionResult AddEdit(int id = 0)
 
     if (id > 0)
     {
-        using (SqlConnection connection = new SqlConnection(
-               configuration.GetConnectionString("ConnectionString")))
+        string connectionString = configuration.GetConnectionString("ConnectionString");
+        SqlConnection connection = new SqlConnection(connectionString);
+        SqlCommand command = new SqlCommand("PR_MOM_Department_SelectByID", connection);
+
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@DepartmentID", id);
+
+        connection.Open();
+        SqlDataReader reader = command.ExecuteReader();
+
+        if (reader.Read())
         {
-            SqlCommand command = new SqlCommand("PR_MOM_Department_SelectByID", connection);
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@DepartmentID", id);
-
-            connection.Open();
-            SqlDataReader reader = command.ExecuteReader();
-
-            if (reader.Read())
-            {
-                model.DepartmentID = Convert.ToInt32(reader["DepartmentID"]);
-                model.DepartmentName = reader["DepartmentName"].ToString();
-            }
+            model.DepartmentID = Convert.ToInt32(reader["DepartmentID"]);
+            model.DepartmentName = reader["DepartmentName"].ToString();
         }
+
+        connection.Close();
     }
 
     return View(model);
 }
 ```
 
+⚠️ **Error Points:**
+
+* If connection.Close() is forgotten → connection leak
+* If SelectByID SP not created → runtime error
+* If reader column name spelling is wrong → exception
+
 ---
 
-# Step 6: Single Save Method (POST)
+# Step 6: Single Save Method (POST) – Without using
 
 ```csharp
 [HttpPost]
@@ -134,32 +143,30 @@ public IActionResult Save(DepartmentModel model)
 {
     if (ModelState.IsValid)
     {
-        using (SqlConnection connection = new SqlConnection(
-               configuration.GetConnectionString("ConnectionString")))
+        string connectionString = configuration.GetConnectionString("ConnectionString");
+        SqlConnection connection = new SqlConnection(connectionString);
+        SqlCommand command = new SqlCommand();
+
+        command.Connection = connection;
+        command.CommandType = CommandType.StoredProcedure;
+
+        if (model.DepartmentID == 0)
         {
-            using (SqlCommand command = new SqlCommand())
-            {
-                command.Connection = connection;
-                command.CommandType = CommandType.StoredProcedure;
-
-                if (model.DepartmentID == 0)
-                {
-                    // INSERT
-                    command.CommandText = "PR_MOM_Department_Insert";
-                    command.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
-                }
-                else
-                {
-                    // UPDATE
-                    command.CommandText = "PR_MOM_Department_Update";
-                    command.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
-                    command.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
-                }
-
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
+            // INSERT
+            command.CommandText = "PR_MOM_Department_Insert";
+            command.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
         }
+        else
+        {
+            // UPDATE
+            command.CommandText = "PR_MOM_Department_Update";
+            command.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
+            command.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
+        }
+
+        connection.Open();
+        command.ExecuteNonQuery();
+        connection.Close();
 
         return RedirectToAction("Index");
     }
@@ -170,58 +177,43 @@ public IActionResult Save(DepartmentModel model)
 
 ---
 
-# Step 7: AddEdit View
+# 🚨 Important Error-Causing Points (Very Important for Students)
 
-```csharp
-@model DepartmentModel
+### 1️⃣ If connection.Open() is not called
 
-<form asp-action="Save" method="post">
+→ ExecuteNonQuery() will throw error.
 
-    <input type="hidden" asp-for="DepartmentID" />
+### 2️⃣ If connection.Close() is not called
 
-    <div>
-        <label>Department Name</label>
-        <input asp-for="DepartmentName" />
-    </div>
+→ Database connection remains open (Performance issue).
 
-    <button type="submit">Save</button>
+### 3️⃣ If parameter name mismatches SP
 
-</form>
-```
+Example: `@DeptName` instead of `@DepartmentName`
+→ SQL error will occur.
 
----
+### 4️⃣ If DepartmentID hidden field removed from form
 
-# 🔍 How It Works (Explain to Students)
+→ Update will behave like Insert.
 
-### Case 1: Insert
+### 5️⃣ If ModelState.IsValid not checked
 
-* DepartmentID = 0
-* Insert SP called
-* Created auto-filled
-* Modified set using GETDATE()
+→ Invalid or empty data may go to database.
 
-### Case 2: Update
+### 6️⃣ If Modified column not handled in SP
 
-* DepartmentID > 0
-* Update SP called
-* Modified updated
-* Created remains unchanged
+→ Insert will fail because column is NOT NULL.
 
 ---
 
-# 🧠 Important Table Concepts
+# 🧠 How It Works
 
-✔ IDENTITY(1,1) → Auto Increment
-✔ Created has DEFAULT GETDATE()
-✔ Modified must always have value
-✔ Primary Key decides Insert or Update
-
----
-
-# 📌 Memory Flow
-
-Form → Save() → IF(ID==0) → Insert SP
-Else → Update SP → Modified = GETDATE() → Done
+Form → Save()
+IF (DepartmentID == 0) → Call Insert SP
+ELSE → Call Update SP
+ExecuteNonQuery()
+Redirect to Index
 
 ---
+
 
