@@ -1,4 +1,4 @@
-# Insert & Update Department Using Single Save Method 
+# Insert & Update Department Using Single Save Method (Without using Statement)
 
 ---
 
@@ -98,7 +98,7 @@ public DepartmentController(IConfiguration _configuration)
 # Step 5: AddEdit (GET Method)
 
 ```csharp
-public IActionResult AddEdit(int id = 0)
+public IActionResult AddEdit(int? id)
 {
     DepartmentModel model = new DepartmentModel();
 
@@ -174,7 +174,12 @@ public IActionResult Save(DepartmentModel model)
     return View("AddEdit", model);
 }
 ```
-
+## command.Parameters.AddWithValue
+✅ What it does:
+Creates a parameter automatically.
+Automatically guesses the SQL type from the value in C#.
+# My Question to you in Delete what we used to get parameter??
+Sets the value for you.
 ---
 
 # 🚨 Important Error-Causing Points (Very Important for Students)
@@ -213,6 +218,96 @@ IF (DepartmentID == 0) → Call Insert SP
 ELSE → Call Update SP
 ExecuteNonQuery()
 Redirect to Index
+
+---
+
+# Step 7: AddEdit View (Razor Form)
+
+📁 Views/Department/AddEdit.cshtml
+
+```csharp
+@model DepartmentModel
+
+<h2>Add / Edit Department</h2>
+
+<form asp-action="Save" method="post">
+
+    <!-- Hidden field is VERY IMPORTANT for Update -->
+    <input type="hidden" asp-for="DepartmentID" />
+
+    <div>
+        <label>Department Name</label>
+        <input asp-for="DepartmentName" class="form-control" />
+    </div>
+
+    <br />
+    <button type="submit" class="btn btn-primary">Save</button>
+
+</form>
+```
+
+---
+
+# 🧠 View Explanation (Student Friendly)
+
+### 1️⃣ @model DepartmentModel
+
+This makes the view strongly typed.
+It connects form fields with DepartmentModel properties.
+
+⚠️ Error: If model type mismatches controller return type → runtime error.
+
+---
+
+### 2️⃣ Hidden Field (Most Important)
+
+```html
+<input type="hidden" asp-for="DepartmentID" />
+```
+
+Why required?
+
+* When editing, DepartmentID must go back to controller.
+* Without this, Update will not work.
+* It will behave like Insert.
+
+⚠️ Very Common Exam Question.
+
+---
+
+### 3️⃣ asp-for Tag Helper
+
+```html
+<input asp-for="DepartmentName" />
+```
+
+Automatically:
+
+* Binds value
+* Sets name attribute
+* Connects to model binding
+
+⚠️ If property name spelling is wrong → Model binding fails.
+
+---
+
+# 🔄 Complete Flow (Add + Edit)
+
+### ➤ Add Case
+
+* URL: /Department/AddEdit
+* id = null
+* Empty form opens
+* DepartmentID = 0
+* Save() calls Insert SP
+
+### ➤ Edit Case
+
+* URL: /Department/AddEdit/5
+* id = 5
+* Data fetched from database
+* Hidden field contains DepartmentID
+* Save() calls Update SP
 
 ---
 
