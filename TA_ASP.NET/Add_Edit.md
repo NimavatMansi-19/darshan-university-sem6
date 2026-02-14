@@ -178,38 +178,11 @@ public IActionResult Save(DepartmentModel model)
 ✅ What it does:
 Creates a parameter automatically.
 Automatically guesses the SQL type from the value in C#.
-# My Question to you in Delete what we used to get parameter??
+### My Question to you in Delete what we used to get parameter??
 Sets the value for you.
 ---
 
-# 🚨 Important Error-Causing Points (Very Important for Students)
 
-### 1️⃣ If connection.Open() is not called
-
-→ ExecuteNonQuery() will throw error.
-
-### 2️⃣ If connection.Close() is not called
-
-→ Database connection remains open (Performance issue).
-
-### 3️⃣ If parameter name mismatches SP
-
-Example: `@DeptName` instead of `@DepartmentName`
-→ SQL error will occur.
-
-### 4️⃣ If DepartmentID hidden field removed from form
-
-→ Update will behave like Insert.
-
-### 5️⃣ If ModelState.IsValid not checked
-
-→ Invalid or empty data may go to database.
-
-### 6️⃣ If Modified column not handled in SP
-
-→ Insert will fail because column is NOT NULL.
-
----
 
 # 🧠 How It Works
 
@@ -291,9 +264,9 @@ Automatically:
 
 ---
 
-# 🔄 Complete Flow (Add + Edit)
 
-### ➤ Add Case
+
+### Add Case
 
 * URL: /Department/AddEdit
 * id = null
@@ -301,7 +274,7 @@ Automatically:
 * DepartmentID = 0
 * Save() calls Insert SP
 
-### ➤ Edit Case
+### Edit Case
 
 * URL: /Department/AddEdit/5
 * id = 5
