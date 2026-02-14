@@ -100,10 +100,11 @@ public DepartmentController(IConfiguration _configuration)
 ```csharp
 public IActionResult AddEdit(int? id)
 {
-    DepartmentModel model = new DepartmentModel();
+    
 
     if (id > 0)
     {
+        DepartmentModel model = new DepartmentModel();
         string connectionString = configuration.GetConnectionString("ConnectionString");
         SqlConnection connection = new SqlConnection(connectionString);
         SqlCommand command = new SqlCommand("PR_MOM_Department_SelectByID", connection);
@@ -121,9 +122,10 @@ public IActionResult AddEdit(int? id)
         }
 
         connection.Close();
+        return View(model);
     }
 
-    return View(model);
+    return View();
 }
 ```
 
