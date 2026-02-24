@@ -1,4 +1,4 @@
-# Implementing Department Drop-Down in ASP.NET Core MVC (Using Stored Procedure & Model)
+# Implementing Department Drop-Down in ASP.NET Core MVC 
 
 **Prerequisite:** Ensure the Drop-Down Stored Procedure is created in your database.
 
@@ -179,27 +179,5 @@ public IActionResult StaffAddEdit(StaffModel model)
 
 ---
 
-# Common Errors Students Make
 
-1️⃣ Forget to load dropdown in GET
-2️⃣ Forget to reload dropdown when ModelState fails
-3️⃣ Using ViewBag instead of Model (not recommended)
-4️⃣ Spelling mistake in column names
-5️⃣ Not setting asp-for="DepartmentID"
 
----
-
-# Viva Questions
-
-1. Why use Stored Procedure for dropdown?
-2. Why avoid DataTable?
-3. Why reload dropdown when ModelState fails?
-4. Difference between ViewBag and Model-based dropdown?
-5. What is SelectList?
-
----
-
-✅ Clean MVC Architecture
-✅ Model-Based DropDown
-✅ Stored Procedure Used
-✅ Perfect for Practical & Viva
