@@ -1,183 +1,138 @@
-# Implementing Department Drop-Down in ASP.NET Core MVC 
+# Department Drop-Down in Staff Table (Using Stored Procedure & Same Code Pattern as Images)
 
-**Prerequisite:** Ensure the Drop-Down Stored Procedure is created in your database.
+This documentation is created exactly based on the provided images.
+It uses:
+
+✔ Stored Procedure
+✔ SelectListItem
+✔ ViewBag.DepartmentList
+✔ FillDepartmentDropDown() method
+✔ Same structure as shown in screenshots
 
 ---
 
-# Step 1: Create Drop-Down Stored Procedure
-
-Below is the SQL stored procedure to fetch Department data for the dropdown:
+# Step 1: Create Stored Procedure
 
 ```sql
-CREATE PROCEDURE [dbo].[PR_MOM_Department_SelectForDropDown]
+CREATE PROCEDURE [dbo].[PR_MOM_Department_DDL]
 AS
 BEGIN
-    SELECT
-        DepartmentID,
-        DepartmentName
+    SELECT DepartmentID, DepartmentName
     FROM MOM_Department
     ORDER BY DepartmentName
 END
 ```
 
-✔ Only required columns selected
-✔ Ordered alphabetically
-✔ Used only for dropdown purpose
+✔ Used only for DropDown
+✔ Returns DepartmentID & DepartmentName
 
----
 
-# Step 2: Create Drop-Down Model
 
-Inside `DepartmentModel.cs` create a separate dropdown model.
+# Step 2: StaffController Code
+
+## AddEdit Action (GET)
 
 ```csharp
-public class DepartmentDropDownModel
+public IActionResult AddEdit()
 {
-    public int DepartmentID { get; set; }
-    public string DepartmentName { get; set; }
+    ViewBag.DepartmentList = FillDepartmentDropDown();
+    return View("StaffAddEdit");
 }
 ```
 
-✔ Keeps dropdown clean
-✔ Industry best practice
-✔ No DataTable used
+✔ Loads dropdown before returning view
+
+⚠️ ERROR POINT:
+If FillDepartmentDropDown() is not called → DropDown will be empty.
 
 ---
 
-# Step 3: Update Staff Model
+# Step 3: FillDepartmentDropDown Method
 
 ```csharp
-public class StaffModel
+public List<SelectListItem> FillDepartmentDropDown()
 {
-    public int StaffID { get; set; }
-    public int DepartmentID { get; set; }
-    public string StaffName { get; set; }
-    public string MobileNo { get; set; }
-    public string EmailAddress { get; set; }
-    public string Remarks { get; set; }
+    List<SelectListItem> deptList = new List<SelectListItem>();
 
-    // Dropdown List
-    public List<DepartmentDropDownModel> DepartmentList { get; set; }
-}
-```
+    SqlConnection sqlConnection = new SqlConnection(
+        _configuration.GetConnectionString("DefaultConnection"));
 
-✔ DepartmentList will hold dropdown data.
+    SqlCommand sqlCommand = sqlConnection.CreateCommand();
+    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+    sqlCommand.CommandText = "PR_MOM_Department_DDL";
 
----
+    sqlConnection.Open();
 
-# Step 4: Create Method to Load Department Drop-Down
-
-In `StaffController` create a new method:
-
-```csharp
-public List<DepartmentDropDownModel> DepartmentDropDown()
-{
-    string connectionString = this._configuration.GetConnectionString("ConnectionString");
-    SqlConnection connection = new SqlConnection(connectionString);
-    connection.Open();
-
-    SqlCommand command = connection.CreateCommand();
-    command.CommandType = System.Data.CommandType.StoredProcedure;
-    command.CommandText = "PR_MOM_Department_SelectForDropDown";
-
-    SqlDataReader reader = command.ExecuteReader();
-
-    List<DepartmentDropDownModel> departmentList = new List<DepartmentDropDownModel>();
+    SqlDataReader reader = sqlCommand.ExecuteReader();
 
     while (reader.Read())
     {
-        DepartmentDropDownModel model = new DepartmentDropDownModel();
-        model.DepartmentID = Convert.ToInt32(reader["DepartmentID"]);
-        model.DepartmentName = reader["DepartmentName"].ToString();
-
-        departmentList.Add(model);
+        deptList.Add(new SelectListItem(
+            reader["DepartmentName"].ToString(),
+            reader["DepartmentID"].ToString()));
     }
 
-    connection.Close();
-    return departmentList;
+    reader.Close();
+    sqlConnection.Close();
+
+    return deptList;
 }
 ```
 
-⚠️ Do NOT forget `connection.Close()`
-⚠️ Column name spelling must match database
+✔ Uses Stored Procedure
+✔ Uses SqlDataReader
+✔ Uses SelectListItem
+✔ Returns List<SelectListItem>
 
 ---
 
-# Step 5: Call Drop-Down Method in AddEdit (GET)
+
+# Step 4: StaffAddEdit.cshtml View
 
 ```csharp
-public IActionResult StaffForm()
-{
-    StaffModel model = new StaffModel();
-    model.DepartmentList = DepartmentDropDown();
-    return View(model);
-}
+@model Staff
+
+<h2>Staff Add Edit</h2>
+<hr />
+
+<form>
+
+    <input type="hidden" asp-for="StaffID" />
+
+    <div class="row mb-3">
+        <label asp-for="StaffName" class="form-label">Staff Name</label>
+        <input asp-for="StaffName" class="form-control" placeholder="Enter Staff Name" />
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label asp-for="DepartmentID" class="form-label">Select Department</label>
+            <select asp-for="DepartmentID"
+                    class="form-control"
+                    asp-items="ViewBag.DepartmentList">
+                <option value="" selected disabled>-- Select Department --</option>
+            </select>
+        </div>
+    </div>
+
+</form>
 ```
 
----
-
-# Step 6: Call Drop-Down When ModelState Fails (POST)
-
-```csharp
-public IActionResult StaffAddEdit(StaffModel model)
-{
-    if (ModelState.IsValid)
-    {
-        return RedirectToAction("StaffList");
-    }
-
-    // IMPORTANT: Reload dropdown
-    model.DepartmentList = DepartmentDropDown();
-    return View("StaffForm", model);
-}
-```
-
-⚠️ If dropdown not reloaded → It becomes empty after validation error.
+✔ asp-for binds DepartmentID
+✔ asp-items binds ViewBag.DepartmentList
+✔ Selected DepartmentID will post back automatically
 
 ---
 
-# Step 7: Add Drop-Down in StaffForm.cshtml
+# How Complete Flow Works
 
-```csharp
-@model StaffModel
-
-<select class="form-control"
-        asp-for="DepartmentID"
-        asp-items="@(new SelectList(Model.DepartmentList, "DepartmentID", "DepartmentName"))">
-    <option value="">Select Department</option>
-</select>
-```
-
-✔ asp-for binds selected value
-✔ SelectList binds text & value
-✔ Strongly typed (No ViewBag used)
+1️⃣ Page loads AddEdit()
+2️⃣ FillDepartmentDropDown() executes SP
+3️⃣ Data comes using SqlDataReader
+4️⃣ List<SelectListItem> created
+5️⃣ Stored in ViewBag.DepartmentList
+6️⃣ View binds dropdown using asp-items
+7️⃣ Selected value posted to DepartmentID
 
 ---
-
-# Alternative Method (Using foreach)
-
-```csharp
-<select class="form-control" asp-for="DepartmentID">
-    <option value="">Select Department</option>
-    @foreach (var dept in Model.DepartmentList)
-    {
-        <option value="@dept.DepartmentID">@dept.DepartmentName</option>
-    }
-</select>
-```
-
----
-
-# How Drop-Down Works
-
-1️⃣ Controller calls Stored Procedure
-2️⃣ SqlDataReader reads rows
-3️⃣ Data stored in List<DepartmentDropDownModel>
-4️⃣ List assigned to Model.DepartmentList
-5️⃣ View binds using SelectList
-6️⃣ Selected DepartmentID posted back to controller
-
----
-
-
 
