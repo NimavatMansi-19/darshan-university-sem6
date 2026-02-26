@@ -1,15 +1,4 @@
-# Department Drop-Down in Staff Table (Using Stored Procedure & Same Code Pattern as Images)
-
-This documentation is created exactly based on the provided images.
-It uses:
-
-✔ Stored Procedure
-✔ SelectListItem
-✔ ViewBag.DepartmentList
-✔ FillDepartmentDropDown() method
-✔ Same structure as shown in screenshots
-
----
+# Department Drop-Down in Staff Table
 
 # Step 1: Create Stored Procedure
 
