@@ -133,40 +133,9 @@ private List<Department> GetDepartments(string searchText)
 ```
 @model IEnumerable<P_Mom.Models.DepartmentModel>
 
-@{
-    ViewData["Title"] = "Department List";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
 
-@* Display Messages *@
-<span class="text-danger">@TempData["ErrorMessage"]</span>
-<span class="text-success">@TempData["SuccessMessage"]</span>
 
-<!-- Custom CSS -->
-<link rel="stylesheet" href="~/css/department-list.css" />
 
-<div class="container">
-
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="main-title">Departments</h4>
-            <p class="sub-title">Manage organization departments</p>
-        </div>
-        <a asp-controller="Department"
-               asp-action="DepartmentAddEdit"
-               class="btn btn-primary-custom">
-            <i class="bi bi-plus-circle"></i> Add Department
-        </a>
-    </div>
-
-    <!-- Card -->
-    <div class="card custom-card">
-
-        <div class="card-header-custom">
-            <i class="bi bi-diagram-3-fill"></i>
-            Department List
-        </div>
 
         <!-- 🔍 SEARCH FORM -->
         <div class="card-body pb-0">
@@ -196,82 +165,7 @@ private List<Department> GetDepartments(string searchText)
             </form>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Department Name</th>
-                        <th>Created Date</th>
-                        <th>Last Modified</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.DepartmentID</td>
-                                <td>@item.DepartmentName</td>
-                                <td>@(item.Created?.ToString("yyyy-MM-dd") ?? "")</td>
-                                <td>@(item.Modified?.ToString("yyyy-MM-dd") ?? "")</td>
-
-                                <td class="text-end">
-                                    <div class="action-btn-group">
-
-                                        <!-- View -->
-                                        <a href="#" class="action-btn view">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        <!-- Edit -->
-                                        <a asp-controller="Department"
-                                               asp-action="DepartmentAddEdit"
-                                               asp-route-DepartmentID="@item.DepartmentID"
-                                               class="action-btn edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-
-                                        <!-- Delete -->
-                                        <a asp-controller="Department"
-                                               asp-action="DepartmentDelete"
-                                               asp-route-DepartmentID="@item.DepartmentID"
-                                               class="action-btn delete"
-                                               onclick="return confirmDelete();">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center p-4">
-                                No Departments Found
-                            </td>
-                        </tr>
-                    }
-
-                </tbody>
-            </table>
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-    function confirmDelete() {
-        return confirm("Are you sure you want to delete this department?");
-    }
-</script>
+     
 ```
 ## 🔎 Why Helper Method is Important?
 
