@@ -57,7 +57,7 @@ END
 
 ```csharp
 [HttpGet]
-public IActionResult Index()
+public IActionResult List()
 {
     List<Department> list = GetDepartments(null);
     return View(list);
@@ -68,7 +68,7 @@ public IActionResult Index()
 
 ```csharp
 [HttpPost]
-public IActionResult Index(IFormCollection formData)
+public IActionResult List(IFormCollection formData)
 {
     string searchText = formData["SearchText"].ToString();
 
