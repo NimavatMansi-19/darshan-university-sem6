@@ -131,13 +131,7 @@ private List<Department> GetDepartments(string searchText)
 ```
 # 4.View
 ```
-@model IEnumerable<P_Mom.Models.DepartmentModel>
-
-
-
-
-
-        <!-- 🔍 SEARCH FORM -->
+  <!-- 🔍 SEARCH FORM -->
         <div class="card-body pb-0">
             <form asp-action="DepartmentList" method="post" class="mb-3">
                 <div class="row g-2 align-items-center">
