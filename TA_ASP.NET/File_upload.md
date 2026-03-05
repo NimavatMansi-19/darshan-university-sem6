@@ -34,13 +34,6 @@ public IActionResult SaveStaff([FromForm] StaffModel model)
 }
 ```
 
-ASP.NET Core will bind:
-
-| Form Field   | Model Property     |
-| ------------ | ------------------ |
-| StaffName    | model.StaffName    |
-| EmailAddress | model.EmailAddress |
-| StaffImage   | model.StaffImage   |
 
 ---
 
@@ -74,59 +67,6 @@ Example request:
 ```
 
 Here ASP.NET Core converts JSON data into a **C# object**.
-
----
-
-# 3️⃣ Why `[FromBody]` Cannot Upload Files
-
-`[FromBody]` expects:
-
-```
-application/json
-```
-
-JSON is **text-based**, so it cannot properly transfer:
-
-* Images
-* Videos
-* PDFs
-
-If you try uploading a file using `[FromBody]`:
-
-```
-StaffImage = null
-```
-
-The upload will fail.
-
----
-
-# 4️⃣ Why `[FromForm]` is Required for File Upload
-
-File uploads require:
-
-```
-multipart/form-data
-```
-
-This request format supports:
-
-✔ text fields
-✔ binary files
-✔ multiple values
-
-Example:
-
-```csharp
-[HttpPost]
-public IActionResult Save([FromForm] StaffModel model)
-```
-
-Now ASP.NET Core correctly reads:
-
-* `model.StaffName`
-* `model.EmailAddress`
-* `model.StaffImage`
 
 ---
 
@@ -166,7 +106,7 @@ ASP.NET Core opens the parcel and reads everything correctly.
 
 ---
 
-# 5️⃣ Difference Between `[FromForm]` and `[FromBody]`
+# 3️⃣ Difference Between `[FromForm]` and `[FromBody]`
 
 | Feature                       | FromForm            | FromBody         |
 | ----------------------------- | ------------------- | ---------------- |
@@ -178,7 +118,7 @@ ASP.NET Core opens the parcel and reads everything correctly.
 
 ---
 
-# 6️⃣ Staff Image Upload Implementation
+# 4️⃣ Staff Image Upload Implementation
 
 ## Step 1 – Staff Model
 
@@ -192,15 +132,12 @@ public class StaffModel
     public string EmailAddress { get; set; }
 
     public IFormFile StaffImage { get; set; }
-
-    [NotMapped]
-    public string? ImagePath { get; set; }
 }
 ```
 
 
 
-# 7️⃣ View Code (StaffAddEdit.cshtml)
+# 5️⃣ View Code (StaffAddEdit.cshtml)
 
 ⚠ **Important:** `enctype` must be `multipart/form-data`
 
@@ -230,38 +167,64 @@ Browser will not send the file.
 
 ---
 
-# 8️⃣ Controller Code
+# 6️⃣ Controller Code
 
 ```csharp
 [HttpPost]
-public IActionResult Save([FromForm] StaffModel model)
-{
-    if (model.StaffImage != null && model.StaffImage.Length > 0)
+ public IActionResult Save([FromForm] StaffModel model)
+ {
+     ViewBag.DepartmentList = FillDepartmentDropDown();
+
+    ModelState.Remove("StaffImage");
+
+    if (model.StaffImage != null)
     {
-        string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
-
-        string fileName = Path.GetFileName(model.StaffImage.FileName);
-
-        string filePath = Path.Combine(folderPath, fileName);
-
-        using (FileStream stream = new FileStream(filePath, FileMode.Create))
-        {
-            model.StaffImage.CopyTo(stream);
-        }
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", model.StaffImage.FileName);
+        FileStream stream = new FileStream(path, FileMode.Create);
+        model.StaffImage.CopyTo(stream);
+        stream.Close();
     }
+     if (ModelState.IsValid)
+     {
+         using (SqlConnection connection =
+             new SqlConnection(configuration.GetConnectionString("ConnectionString")))
+         {
+             using (SqlCommand command = new SqlCommand())
+             {
+                 command.Connection = connection;
+                 command.CommandType = CommandType.StoredProcedure;
 
-    return RedirectToAction("StaffList");
-}
+                 if (model.StaffID == 0)
+                 {
+                     command.CommandText = "PR_MOM_Staff_Insert";
+                 }
+                 else
+                 {
+                     command.CommandText = "PR_MOM_Staff_Update";
+                     command.Parameters.AddWithValue("@StaffID", model.StaffID);
+                 }
+
+                 command.Parameters.AddWithValue("@StaffName", model.StaffName);
+                 command.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
+                 command.Parameters.AddWithValue("@MobileNo", model.MobileNo);
+                 command.Parameters.AddWithValue("@EmailAddress", model.EmailAddress);
+                 command.Parameters.AddWithValue("@Remarks", model.Remarks);
+
+                 connection.Open();
+                 command.ExecuteNonQuery();
+             }
+         }
+
+         return RedirectToAction("StaffList");
+     }
+
+     return View("StaffAddEdit", model);
+ }
 ```
 
 ---
 
-# 9️⃣ Upload Workflow
+# 7️⃣ Upload Workflow
 
 ```
 User selects image
