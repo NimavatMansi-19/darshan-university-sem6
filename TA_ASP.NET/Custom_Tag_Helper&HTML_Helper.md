@@ -43,7 +43,13 @@ ASP.NET Core provides many built-in HTML Helpers.
 
 Example of HTML Helper:
 
----
+```
+@Html.TextBox("Name")
+```
+Generated HTML:
+```
+<input type="text" name="Name">
+```
 
 ## 1️⃣ Without Validation Attributes
 
