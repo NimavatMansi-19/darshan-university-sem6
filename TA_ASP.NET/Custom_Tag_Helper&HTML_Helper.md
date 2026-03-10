@@ -43,17 +43,84 @@ ASP.NET Core provides many built-in HTML Helpers.
 
 Example of HTML Helper:
 
-```html
-@Html.TextBox("Name")
+---
+
+## 1️⃣ Without Validation Attributes
+
+### Model
+
+```csharp
+public class User
+{
+    public string Name { get; set; }
+}
 ```
 
-Generated HTML:
+### View
+
+```csharp
+@model User
+@Html.TextBoxFor(m => m.Name)
+```
+
+### Generated HTML
 
 ```html
-<input type="text" name="Name">
+<input type="text" name="Name" id="Name">
+```
+
+Since there are **no validation rules**, ASP.NET MVC only generates:
+- `name`
+- `id`
+
+---
+
+## 2️⃣ With Validation Attributes
+
+### Model
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+
+public class User
+{
+    [Required(ErrorMessage = "Name is required")]
+    public string Name { get; set; }
+}
+```
+
+### View
+
+```csharp
+@model User
+@Html.TextBoxFor(m => m.Name)
+```
+
+### Generated HTML
+
+```html
+<input type="text"
+       name="Name"
+       id="Name"
+       data-val="true"
+       data-val-required="Name is required">
 ```
 
 ---
+
+## What Are `data-val` Attributes?
+
+```
+data-val="true"
+data-val-required="Name is required"
+```
+
+These attributes are generated from **DataAnnotations validation attributes**.
+
+They are used by **jQuery Unobtrusive Validation** for **client-side validation**.
+
+---
+
 
 # 4️⃣ Example – HTML Helper in a Form
 
@@ -62,7 +129,9 @@ Generated HTML:
 ```csharp
 public class User
 {
+    [Required]
     public string Name { get; set; }
+     [Required]
     public string Email { get; set; }
 }
 ```
